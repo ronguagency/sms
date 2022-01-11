@@ -47,5 +47,11 @@
                 "Rongu\\Sms\\SmsServiceProvider"
             ]
         }
+    },
+    "repositories": {
+        "gitlab.com/15193552": {
+            "type": "composer",
+            "url": "https://gitlab.com/api/v4/group/15193552/-/packages/composer/packages.json"
+        }
     }
 }
