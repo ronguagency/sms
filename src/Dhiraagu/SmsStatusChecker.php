@@ -22,7 +22,10 @@ class SmsStatusChecker
         $this->smsNotification = $smsNotification;
         $this->messageId = $smsNotification->message_id;
         $this->messageKey = $smsNotification->message_key;
-        
+
+        if($this->messageId == 0) {
+            return;
+        }
         $this->resp = $this->send();
         Log::debug($this->resp);
 
@@ -72,7 +75,8 @@ class SmsStatusChecker
     }
 
     private function messageWasDelivered() {
-        return ($this->messageDeliveryCode() == self::CODE_DELIVERED_TO_HEADSET);
+        Log::info('message delevery/failed code: '.json_encode($this->messageDeliveryCode()));
+        return ($this->messageDeliveryCode() < 3000);
     }
 
     private function updateDelivery() {
@@ -82,7 +86,8 @@ class SmsStatusChecker
     }
 
     private function messageDeliveryFailed() {
-        return ($this->messageDeliveryCode() == self::CODE_DELIVERY_FAILED);
+        Log::info('message delevery/failed code: '.json_encode($this->messageDeliveryCode()));
+        return ($this->messageDeliveryCode() >= 4000 );
     }
 
     private function updateDeliveryFailure() {
@@ -103,6 +108,9 @@ class SmsStatusChecker
 
     public function send()
     {
+        if($this->messageId == 0) {
+            return null;
+        }
         return SmsXmlPostResponse::make(
             Http::withBody(
                 $this->xmlBody(), 'text/xml'

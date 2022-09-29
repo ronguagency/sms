@@ -24,7 +24,7 @@ class Sms
         return $this;
     }
 
-    public function to(int $mobileNo) : Sms
+    public function to($mobileNo) : Sms
     {
         $this->mobileNo = new MvMobileNumber($mobileNo);
         return $this;

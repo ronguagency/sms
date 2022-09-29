@@ -4,6 +4,7 @@ namespace Rongu\Sms\Services;
 
 use Carbon\Carbon;
 use Closure;
+use Illuminate\Support\Facades\Log;
 use Rongu\Sms\Dhiraagu\SmsXmlPostResponse;
 use Rongu\Sms\Dhiraagu\XmlPostBasedSender;
 use Rongu\Sms\Jobs\SmsStatusCheckJob;
@@ -15,8 +16,25 @@ class SmsSenderService
 
     }
 
+    private function isDuplicateSms() {
+        $smsMobileNo = $this->sms->mobileNo->__toString();
+        $smsText = $this->sms->body;
+        $isDuplicate = $this->sms->smsNotificationModel->where('mobile_no', $smsMobileNo)->where('sms_text', $smsText)->exists();
+        if($isDuplicate) {
+            Log::error(json_encode([
+                'isDuplicate'=> $isDuplicate,
+                'smsMobileNo' => $smsMobileNo,
+                'smsText' => $smsText,
+            ]));
+        }
+        return $isDuplicate;
+    }
+
     public function send()
     {
+        if($this->isDuplicateSms()) {
+            return;
+        }
         
         $smsNotification = $this->storeSmsNotification();
 
