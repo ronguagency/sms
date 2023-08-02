@@ -9,6 +9,8 @@ use Rongu\Sms\Core\XmlResponse;
 
 class XmlPostBasedSender implements SmsSenderInterface
 {
+    private $smsCharLimit = 160;
+    private $smsCharLimitInd = "[smsCharLimitInd]";
 
     public function send(string $mobileNo, string $smsText)
     {
@@ -23,9 +25,22 @@ class XmlPostBasedSender implements SmsSenderInterface
         return view('sms::sms_send_xml')->with([
             'user' => Config::get('sms.userId'),
             'passwd' => Config::get('sms.password'),
-            'index' => 0,
-            'smsText' => $smsText,
+            'smsTexts' => $this->chunkAndFormatSmsText($smsText),
             'mobileNo' => $mobileNo,
         ])->render();
+    }
+
+    private function chunkAndFormatSmsText($smsText)
+    {
+        $smsText = $this->replaceNewLineChars($smsText);
+        return explode(
+            $this->smsCharLimitInd, 
+            wordwrap($smsText, $this->smsCharLimit ,$this->smsCharLimitInd)
+        );
+    }
+
+    private function replaceNewLineChars($smsText) {
+        return str_replace('\r', '&#xA;&#xD;', $smsText);
+
     }
 }

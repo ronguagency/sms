@@ -16,53 +16,33 @@ class SmsStatusChecker
     private $messageKey;
     private $resp;
     private $smsNotification;
+    private $invalidMessageId = false;
     
-    public function check($smsNotification)
+    public function check($messageId, $messageKey)
     {
-        $this->smsNotification = $smsNotification;
-        $this->messageId = $smsNotification->message_id;
-        $this->messageKey = $smsNotification->message_key;
+        $this->messageId = $messageId;
+        $this->messageKey = $messageKey;
 
         if($this->messageId == 0) {
-            return;
+            $this->invalidMessageId = true;
+            Log::debug("Message id is zero, this is invalid");
+            return $this;
         }
         $this->resp = $this->send();
         Log::debug($this->resp);
 
-        if($this->messageWasDelivered()) {
-            $this->updateDelivery();
-            return;
-        }
-
-        if($this->messageDeliveryFailed()) {
-            $this->updateDeliveryFailure();
-            return;
-        }
-
-        $this->retry();
+        return $this;
     }
 
-    private function retry() {
-        $retries = $this->smsNotification->retries;
-        $this->smsNotification->update([
-            'retries' => $retries + 1,
-        ]);
-        if($retries < 3) {
-            throw new Exception("Unidentified status we will retry");
-        } else {
-            $this->smsNotification->update([
-                'abandoned_at' => Carbon::now(),
-                'abandoned_reason' => 'No updates after trying 3 times',
-            ]);
+    public function messageStatusId() {
+        if($this->invalidMessageId) {
+            return 9999; // to indicate invalid message;
         }
-    }
-
-    private function messageDeliveryCode() {
         
         return $this->resp->getPath('TELEMESSAGE_CONTENT.MESSAGE_STATUS.STATUS_ID');
     }
 
-    private function messageStatusDate() {
+    public function messageStatusDate() {
         return Carbon::parse(
             $this->resp->getPath(
                 'TELEMESSAGE_CONTENT.MESSAGE_STATUS.RECIPIENT_STATUS.DEVICE.STATUS_DATE'
@@ -70,33 +50,20 @@ class SmsStatusChecker
             )->addHours(5);
     }
 
-    private function messageStatusDescriptoin() {
+    public function messageStatusDescription() {
         return $this->resp->getPath('TELEMESSAGE_CONTENT.MESSAGE_STATUS.RECIPIENT_STATUS.DEVICE.DESCRIPTION');
     }
 
-    private function messageWasDelivered() {
-        Log::info('message delevery/failed code: '.json_encode($this->messageDeliveryCode()));
-        return ($this->messageDeliveryCode() < 3000);
+    public function messageWasDelivered() {
+        Log::info('message delevery/failed code: '.json_encode($this->messageStatusId()));
+        return ($this->messageStatusId() < 3000);
     }
 
-    private function updateDelivery() {
-        $this->smsNotification->update([
-            'delivered_status_at' => $this->messageStatusDate(),
-        ]);
+    public function messageDeliveryFailed() {
+        Log::info('message delivery/failed code: '.json_encode($this->messageStatusId()));
+        return ($this->messageStatusId() >= 4000 );
     }
 
-    private function messageDeliveryFailed() {
-        Log::info('message delevery/failed code: '.json_encode($this->messageDeliveryCode()));
-        return ($this->messageDeliveryCode() >= 4000 );
-    }
-
-    private function updateDeliveryFailure() {
-        
-        $this->smsNotification->update([
-            'abandoned_at' => $this->messageStatusDate(),
-            'abandoned_reason' => $this->messageStatusDescriptoin(),
-        ]);
-    }
 
     public function xmlBody()
     {

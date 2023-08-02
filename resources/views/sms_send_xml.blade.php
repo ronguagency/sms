@@ -17,10 +17,12 @@
                 </CIML>
             </USER_FROM>
             <MESSAGE_CONTENT>
+                @foreach($smsTexts as $smsText)
                 <TEXT_MESSAGE>
-                    <MESSAGE_INDEX>{{$index}}</MESSAGE_INDEX>
+                    <MESSAGE_INDEX>{{$loop->index}}</MESSAGE_INDEX>
                     <TEXT>{{$smsText}}</TEXT>
                 </TEXT_MESSAGE>
+                @endforeach
             </MESSAGE_CONTENT>
             <USER_TO>
                 <CIML>
