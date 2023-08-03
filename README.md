@@ -1,11 +1,4 @@
-# Very short description of the package
-
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/rongu/sms.svg?style=flat-square)](https://packagist.org/packages/rongu/sms)
-[![Total Downloads](https://img.shields.io/packagist/dt/rongu/sms.svg?style=flat-square)](https://packagist.org/packages/rongu/sms)
-![GitHub Actions](https://github.com/rongu/sms/actions/workflows/main.yml/badge.svg)
-
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
-
+# PHP/Laravel Pkg to send SMS via Dhiraagu Bulk SMS
 ## Installation
 
 You can install the package via composer:
