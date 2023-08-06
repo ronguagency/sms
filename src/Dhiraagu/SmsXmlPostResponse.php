@@ -26,4 +26,15 @@ class SmsXmlPostResponse extends XmlResponse
     public function messageKey() {
         return (string) $this->content()->MESSAGE_KEY;
     }
+
+    public function messageCode() {
+        return ResultCode::tryFrom((string) $this->content()->RESPONSE_STATUS);
+    }
+
+    public function messageCodeOk() {
+        
+        return $this->messageCode() == ResultCode::OK || $this->messageCode() == ResultCode::OK_ALT;
+    }
+
+
 }

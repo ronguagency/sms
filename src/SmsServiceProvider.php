@@ -16,13 +16,18 @@ class SmsServiceProvider extends ServiceProvider
          */
         // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'sms');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'sms');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         // $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/sms.php' => config_path('sms.php'),
             ], 'config');
+
+            // Publishing the migrations.
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'migrations');
 
             // Publishing the views.
             /*$this->publishes([

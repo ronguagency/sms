@@ -17,16 +17,18 @@
                 </CIML>
             </USER_FROM>
             <MESSAGE_CONTENT>
+                @foreach($smsBodyParts as $index => $smsText)
                 <TEXT_MESSAGE>
                     <MESSAGE_INDEX>{{$index}}</MESSAGE_INDEX>
                     <TEXT>{{$smsText}}</TEXT>
                 </TEXT_MESSAGE>
+                @endforeach
             </MESSAGE_CONTENT>
             <USER_TO>
                 <CIML>
                     <DEVICE_INFORMATION>
                         <DEVICE_TYPE DEVICE_TYPE="SMS"/>
-                        <DEVICE_VALUE>{{$mobileNo}}</DEVICE_VALUE>
+                        <DEVICE_VALUE>{{$mobileNumber}}</DEVICE_VALUE>
                     </DEVICE_INFORMATION>
                 </CIML>
             </USER_TO>

@@ -3,6 +3,7 @@ namespace Rongu\Sms;
 
 use Closure;
 use Rongu\Sms\Core\MvMobileNumber;
+use Rongu\Sms\Dhiraagu\XmlPostBasedSender;
 use Rongu\Sms\Services\SmsSenderService;
 
 class Sms
@@ -17,12 +18,6 @@ class Sms
     public $includeCreateParams;
     public $successClosure;
     public $failureClosure;
-
-    public function send() : Sms
-    {
-        (new SmsSenderService($this))->send();
-        return $this;
-    }
 
     public function to(int $mobileNo) : Sms
     {
