@@ -27,6 +27,10 @@ class SmsXmlPostResponse extends XmlResponse
         return (string) $this->content()->MESSAGE_KEY;
     }
 
+    /** 
+     * messageCode is the same as ResultCode. 
+     * Just that Dhiraagu docs use messageCode when receiving response, and ResultCode when defining the available list.
+     */
     public function messageCode() {
         return ResultCode::tryFrom((string) $this->content()->RESPONSE_STATUS);
     }
