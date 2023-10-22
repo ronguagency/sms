@@ -10,19 +10,23 @@ use Rongu\Sms\Exceptions\InvalidMobileNumberException;
 use Rongu\Sms\Exceptions\SmsSendFailedException;
 use Rongu\Sms\Jobs\SmsStatusCheckJob;
 use Rongu\Sms\Models\DhiSmsLog;
+use Rongu\Sms\Models\VonageSmsLog;
 use Rongu\Sms\Sms;
+use Rongu\Sms\Vonage\VonageSmsSender;
 
 class SmsSenderService
 {
     private $response;
     private $mobileNumber;
     private $smsBody;
+    private $type;
     public function __construct(public Sms $sms) {
 
     }
 
     public function send($mobileNumber, $body)
     {
+        $this->type = 'Dhi';
         $this->mobileNumber = $mobileNumber = $this->cleanSms($mobileNumber);
         $this->smsBody = $body;
         $this->validateSMS($mobileNumber, $body);
@@ -34,13 +38,29 @@ class SmsSenderService
         return $this;
     }
 
+    public function sendViaVonage($mobileNumber, $body, $clientRef = 'sms') 
+    {
+        $this->type = 'Vonage';
+        $this->mobileNumber = $this->cleanSms($mobileNumber);
+        $this->smsBody = $body;
+        $this->validateForeignNumber($mobileNumber);
+        $this->response = app()->make(VonageSmsSender::class)->setClientRef($clientRef)->send($mobileNumber, $body);
+        return $this;
+    }
+
     public function response() {
         return $this->response;
     }
 
     public function save() {
-        return $this->storeSmsLog($this->response, $this->mobileNumber, $this->smsBody);
-
+        $smsLog = null;
+        if($this->type === 'Dhi') {
+            $smsLog = $this->storeDhiSmsLog($this->response, $this->mobileNumber, $this->smsBody);
+        }
+        if($this->type === 'Vonage') {
+            $smsLog = $this->storeVonageSmsLog($this->response, $this->mobileNumber, $this->smsBody);
+        }
+        return $smsLog;
     }
 
     private function validateSMS(string $mobileNumber) {
@@ -50,11 +70,15 @@ class SmsSenderService
         } 
     }
 
+    private function validateForeignNumber(string $mobileNumber) {
+        // implement
+    }
+
     private function cleanSms(string $mobileNumber) : string {
         return preg_replace('/[^0-9]/', '', $mobileNumber);
     }
 
-    private function storeSmsLog($smsResp, $mobileNumber, $body) {      
+    private function storeDhiSmsLog($smsResp, $mobileNumber, $body) {      
         $dhiSmsLog = new DhiSmsLog();
         $dhiSmsLog->mobile_number = $mobileNumber;
         $dhiSmsLog->sms_body = $body;
@@ -63,6 +87,17 @@ class SmsSenderService
         $dhiSmsLog->sent_at = Carbon::now();
         $dhiSmsLog->save();
         return $dhiSmsLog;
+    }
+    
+    
+    private function storeVonageSmsLog($resp, $mobileNumber, $smsBody) {      
+        $vonageSmsLog = new VonageSmsLog();
+        $vonageSmsLog->mobile_number = $mobileNumber;
+        $vonageSmsLog->sms_body = $smsBody;
+        $vonageSmsLog->message_id = $resp->messageId();
+        $vonageSmsLog->sent_at = Carbon::now();
+        $vonageSmsLog->save();
+        return $vonageSmsLog;
     }
 
     private function onSuccess($smsResp, $mobileNumber, $body) {
