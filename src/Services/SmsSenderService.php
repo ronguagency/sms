@@ -41,9 +41,8 @@ class SmsSenderService
     public function sendViaVonage($mobileNumber, $body, $clientRef = 'sms') 
     {
         $this->type = 'Vonage';
-        $this->mobileNumber = $this->cleanSms($mobileNumber);
+        $this->mobileNumber = $mobileNumber = $this->cleanSms($mobileNumber);
         $this->smsBody = $body;
-        $this->validateForeignNumber($mobileNumber);
         $this->response = app()->make(VonageSmsSender::class)->setClientRef($clientRef)->send($mobileNumber, $body);
         return $this;
     }
@@ -70,10 +69,6 @@ class SmsSenderService
         } 
     }
 
-    private function validateForeignNumber(string $mobileNumber) {
-        // implement
-    }
-
     private function cleanSms(string $mobileNumber) : string {
         return preg_replace('/[^0-9]/', '', $mobileNumber);
     }
@@ -88,8 +83,7 @@ class SmsSenderService
         $dhiSmsLog->save();
         return $dhiSmsLog;
     }
-    
-    
+
     private function storeVonageSmsLog($resp, $mobileNumber, $smsBody) {      
         $vonageSmsLog = new VonageSmsLog();
         $vonageSmsLog->mobile_number = $mobileNumber;
